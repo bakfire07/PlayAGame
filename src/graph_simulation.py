@@ -12,23 +12,35 @@ mask_const = 0.5
 
 
 class GameSimulate(object):
-    def __init__(self, n, p, theta):
+
+
+    def create_graph(self, n, p):
         self.network = GenerateGraph(n, p, [])
         self.nodes = {node.index: node for node in self.network.graph.nodes()}  # will save some time
         # centrality =  self.network.centrality()
         self.degree_centrailty = {node.index: key for (node, key) in self.network.centrality().iteritems()}
-        self.node_masks = {node.index: math.exp(- (self.degree_centrailty[node.index] + theta * node.TrueValue))  if node.TrueValue > 0.5 else math.exp(self.degree_centrailty[node.index] + theta * node.TrueValue) for node in self.network.graph.nodes()}
-        self.cost_signal = {node.index: node.TrueValue*self.node_masks[node.index] for node in self.network.graph.nodes()}
-        self.cc_shading = {node: mask_const*math.fabs(1-mask) for node, mask in self.node_masks.iteritems()}
 
-        deception_temp = {node: c*self.cost_signal[node] for node, c in self.degree_centrailty.iteritems()}
-        avg_dvalue = sum(deception_temp.values())*1.0/len(deception_temp)
+    def init_deceptions(self,theta,is_random_deception_req = False):
+        self.node_masks = {node.index: math.exp(
+            - (self.degree_centrailty[node.index] + theta * node.TrueValue)) if node.TrueValue > 0.5 else math.exp(
+            self.degree_centrailty[node.index] + theta * node.TrueValue) for node in self.network.graph.nodes()}
+        self.cost_signal = {node.index: node.TrueValue * self.node_masks[node.index] for node in
+                            self.network.graph.nodes()}
+        self.cc_shading = {node: mask_const * math.fabs(1 - mask) for node, mask in self.node_masks.iteritems()}
+
+        deception_temp = {node: c * self.cost_signal[node] for node, c in self.degree_centrailty.iteritems()}
+        avg_dvalue = sum(deception_temp.values()) * 1.0 / len(deception_temp)
         self.deceptions = {node: 1 if value > avg_dvalue else 0 for node, value in deception_temp.iteritems()}
+
+        # based on the number of deception nodes. Assign them randomly
+        if is_random_deception_req:
+            self.deceptions = self.random_deception_assignment()
+
         self.visited_nodes = dict.fromkeys(self.deceptions.keys())
         for node in self.visited_nodes.keys():
             self.visited_nodes[node] = set()
         self.treasure_node = self.find_treasure_node()
-        print "number of deceptions ", sum(self.deceptions.values())
+        #print "number of deceptions ", sum(self.deceptions.values())
 
     def run_simulation(self, defender_budget, cost_D, attacker_budget, max_time):
 
@@ -50,11 +62,11 @@ class GameSimulate(object):
         while sum(self.payoff_defender) + defender_budget > 0:
             t += 1
             if t >= max_time:
-                print "attacker stayed too long"
+                #print "attacker stayed too long"
                 winner = "defender"
                 break
             if sum([ x if x<0 else 0 for x in self.payoff_attacker]) + attacker_budget < 0:
-                print "attacker exhausted budget"
+                #print "attacker exhausted budget"
                 winner = "defender"
                 break
 
@@ -83,14 +95,14 @@ class GameSimulate(object):
                     else:
                         break
                 if next_node is None:
-                    print "attacker lost, didn't find a node to move"
+                    #print "attacker lost, didn't find a node to move"
                     winner = "defender"
                     break
                 if self.treasure_node.index == next_node.index:
-                    print "attacker found the treasure"
+                    #print "attacker found the treasure"
                     winner = "attacker"
                     break
-                print "next node selected by attacker is: ", next_node.index
+                #print "next node selected by attacker is: ", next_node.index
                 self.visited_nodes[current_node.index].add(next_node.index)
                 self.update_payoff(next_node.index, cost_D, self.deceptions[next_node.index], seen_deception, t)
                 neighbors = self.network.graph.neighbors(next_node)
@@ -100,14 +112,14 @@ class GameSimulate(object):
 
                 current_node = next_node
             else:
-                print "attacker lost, didn't find a node to move onto"
+                #print "attacker lost, didn't find a node to move onto"
                 winner = "defender"
                 break
 
-        print "attacker's payoff: ", sum(self.payoff_attacker)
-        print "defender's payoff: ", sum(self.payoff_defender)
-        print "game ended after {0} moves".format(t)
-        print "winner is ", winner
+        #print "attacker's payoff: ", sum(self.payoff_attacker)
+        #print "defender's payoff: ", sum(self.payoff_defender)
+        #print "game ended after {0} moves".format(t)
+        #print "winner is ", winner
         # self.network.draw_graph()
         return winner
 
@@ -164,6 +176,14 @@ class GameSimulate(object):
         #     return node1
         return node
 
+    def random_deception_assignment(self):
+        num_dec = sum(self.deceptions.values())
+        nodes = self.deceptions.keys()
+        random.shuffle(nodes)
+        deception_dict = dict.fromkeys(nodes[:num_dec], 1)
+        no_deception_dict = dict.fromkeys(nodes[num_dec:], 0)
+        return dict(deception_dict.items() + no_deception_dict.items())
+
     def find_lowest_valuenode(self):
         min_val = 0
         node = None
@@ -203,10 +223,12 @@ if __name__ == '__main__':
     edge_probability = 0.6
     theta = 1
     defender_budget = 100
-    attacker_budget = num_nodes*0.3
+    attacker_budget = num_nodes*1000000
     max_time = num_nodes
     deployment_cost = 1
-    Game = GameSimulate(num_nodes, edge_probability, theta)
+    Game = GameSimulate()
+    Game.create_graph(num_nodes, edge_probability)
+    Game.init_deceptions(theta,True)
     ###
     from collections import defaultdict
 
