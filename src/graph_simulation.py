@@ -222,8 +222,8 @@ if __name__ == '__main__':
     num_nodes = 30
     edge_probability = 0.6
     theta = 1
-    defender_budget = 100
-    attacker_budget = num_nodes*1000000
+    defender_budget = 10000
+    attacker_budget = 9 #num_nodes*1000000
     max_time = num_nodes
     deployment_cost = 1
     Game = GameSimulate()

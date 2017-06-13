@@ -38,8 +38,8 @@ def run_different_budget():
     num_nodes_list = [10,20,30,40]
     edge_probability = 0.6
     theta = 1
-    defender_budget_list = [10000,10,100, 150]
-    attacker_budget_list = [100,10000,100,130]
+    defender_budget_list = [10,10000,100, 150]
+    attacker_budget_list = [10000,10,100,130]
     deployment_cost = 1
     result = defaultdict(int)
     for num_nodes in num_nodes_list:
@@ -81,5 +81,5 @@ def run_different_time():
 
 if __name__ == '__main__':
     #run_vary_theta_nodes_centrality()
-    #run_different_budget()
-    run_different_time()
+    run_different_budget()
+    #run_different_time()
