@@ -97,13 +97,22 @@ def run_random_deployement():
                                  percentage_deception=percentage)
 
             result = defaultdict(int)
+            result1 = defaultdict(int)
             for i in range(100):
                 result[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time)] += 1
+            print "Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (
+            num_nodes, percentage, sum(Game.payoff_defender), result.items())
 
-            print "Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (num_nodes, percentage, sum(Game.payoff_defender),result.items())
+            Game.init_deceptions(theta, is_random_deception_req=False, is_deployment_random=True,percentage_deception=percentage)
+
+            for i in range(100):
+                result1[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time)] += 1
+
+            #print "Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (num_nodes, percentage, sum(Game.payoff_defender),result.items())
+            print "strategy-Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (num_nodes, percentage, sum(Game.payoff_defender),result1.items())
 
 if __name__ == '__main__':
-    run_vary_theta_nodes_centrality()
+    #run_vary_theta_nodes_centrality()
     # run_different_budget()
-    # run_different_time()
-    # run_random_deployement()
+    run_different_time()
+    #run_random_deployement()
