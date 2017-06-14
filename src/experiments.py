@@ -103,7 +103,7 @@ def run_random_deployement():
             print "Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (num_nodes, percentage, sum(Game.payoff_defender),result.items())
 
 if __name__ == '__main__':
-    #run_vary_theta_nodes_centrality()
-    #run_different_budget()
-    #run_different_time()
-    run_random_deployement()
+    run_vary_theta_nodes_centrality()
+    # run_different_budget()
+    # run_different_time()
+    # run_random_deployement()

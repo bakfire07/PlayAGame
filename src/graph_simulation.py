@@ -108,6 +108,7 @@ class GameSimulate(object):
                 #print "next node selected by attacker is: ", next_node.index
                 self.visited_nodes[current_node.index].add(next_node.index)
                 self.update_payoff(next_node.index, cost_D, self.deceptions[next_node.index], seen_deception, t)
+                seen_deception += self.deceptions[next_node.index]
                 neighbors = self.network.graph.neighbors(next_node)
                 if current_node in neighbors:
                     if len(neighbors) > 1:
