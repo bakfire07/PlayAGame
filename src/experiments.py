@@ -79,7 +79,31 @@ def run_different_time():
 
 
 
+def run_random_deployement():
+    num_nodes_list = [10, 20, 30, 40]
+    edge_probability = 0.6
+    theta = 1
+    deployment_cost = 1
+    result = defaultdict(int)
+    for num_nodes in num_nodes_list:
+        defender_budget = 100
+        attacker_budget = 100
+        Game = GameSimulate()
+        Game.create_graph(num_nodes, edge_probability)
+        percentage_list = [0.3,0.5,0.8]
+        max_time = num_nodes
+        for percentage in percentage_list:
+            Game.init_deceptions(theta, is_random_deception_req=True, is_deployment_random=True,
+                                 percentage_deception=percentage)
+
+            result = defaultdict(int)
+            for i in range(100):
+                result[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time)] += 1
+
+            print "Num of Nodes: %d, percentage:%f, defender payoff:%f :%s" % (num_nodes, percentage, sum(Game.payoff_defender),result.items())
+
 if __name__ == '__main__':
     #run_vary_theta_nodes_centrality()
-    run_different_budget()
+    #run_different_budget()
     #run_different_time()
+    run_random_deployement()

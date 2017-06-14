@@ -20,7 +20,7 @@ class GameSimulate(object):
         # centrality =  self.network.centrality()
         self.degree_centrailty = {node.index: key for (node, key) in self.network.centrality().iteritems()}
 
-    def init_deceptions(self,theta,is_random_deception_req = False):
+    def init_deceptions(self,theta,is_random_deception_req = False, is_deployment_random = False,percentage_deception =1):
         self.node_masks = {node.index: math.exp(
             - (self.degree_centrailty[node.index] + theta * node.TrueValue)) if node.TrueValue > 0.5 else math.exp(
             self.degree_centrailty[node.index] + theta * node.TrueValue) for node in self.network.graph.nodes()}
@@ -34,7 +34,10 @@ class GameSimulate(object):
 
         # based on the number of deception nodes. Assign them randomly
         if is_random_deception_req:
-            self.deceptions = self.random_deception_assignment()
+            if is_deployment_random == False:
+                self.deceptions = self.random_deception_assignment()
+            else:
+                self.deceptions = self.random_deception_deployment(percentage_deception)
 
         self.visited_nodes = dict.fromkeys(self.deceptions.keys())
         for node in self.visited_nodes.keys():
@@ -122,6 +125,14 @@ class GameSimulate(object):
         #print "winner is ", winner
         # self.network.draw_graph()
         return winner
+    def random_deception_deployment(self,percentage):
+
+        num_dec = int(len(self.deceptions) * percentage)
+        nodes = self.deceptions.keys()
+        random.shuffle(nodes)
+        deception_dict = dict.fromkeys(nodes[:num_dec], 1)
+        no_deception_dict = dict.fromkeys(nodes[num_dec:], 0)
+        return dict(deception_dict.items() + no_deception_dict.items())
 
     def update_payoff(self, node, cost_d, is_deception, seen_deceptions, t):
         risk = intial_risk + math.exp(damping_factor * t)
@@ -219,16 +230,16 @@ class GameSimulate(object):
 
 
 if __name__ == '__main__':
-    num_nodes = 30
+    num_nodes = 10
     edge_probability = 0.6
     theta = 1
-    defender_budget = 10000
-    attacker_budget = 9 #num_nodes*1000000
+    defender_budget = 100
+    attacker_budget = 140 #num_nodes*1000000
     max_time = num_nodes
     deployment_cost = 1
     Game = GameSimulate()
     Game.create_graph(num_nodes, edge_probability)
-    Game.init_deceptions(theta,True)
+    Game.init_deceptions(theta, is_random_deception_req=True,is_deployment_random=True,percentage_deception=0.3)
     ###
     from collections import defaultdict
 
