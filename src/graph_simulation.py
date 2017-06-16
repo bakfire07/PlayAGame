@@ -56,7 +56,7 @@ class GameSimulate(object):
         current_node = self.find_lowest_valuenode()
         t = 0
         seen_deception = 0
-        winner = "attacker"
+        winner = "Attacker"
         for node in self.visited_nodes.keys():
             self.visited_nodes[node] = set()
         if self.deceptions[0] == 1:
@@ -68,11 +68,11 @@ class GameSimulate(object):
             t += 1
             if t >= max_time:
                 # print "attacker stayed too long"
-                winner = "defender"
+                winner = "Defender"
                 break
             if sum([x if x < 0 else 0 for x in self.payoff_attacker]) + attacker_budget < 0:
                 # print "attacker exhausted budget"
-                winner = "defender"
+                winner = "Defender"
                 break
 
             utilities = self.expected_attacker_payoff(current_node, neighbors, seen_deception, t)
@@ -101,11 +101,11 @@ class GameSimulate(object):
                         break
                 if next_node is None:
                     # print "attacker lost, didn't find a node to move"
-                    winner = "defender"
+                    winner = "Defender"
                     break
                 if self.treasure_node.index == next_node.index:
                     # print "attacker found the treasure"
-                    winner = "attacker"
+                    winner = "Attacker"
                     break
                 # print "next node selected by attacker is: ", next_node.index
                 self.visited_nodes[current_node.index].add(next_node.index)
@@ -127,7 +127,7 @@ class GameSimulate(object):
                 current_node = next_node
             else:
                 # print "attacker lost, didn't find a node to move onto"
-                winner = "defender"
+                winner = "Defender"
                 break
 
         # print "attacker's payoff: ", sum(self.payoff_attacker)
@@ -168,27 +168,33 @@ class GameSimulate(object):
 
     def update_payoff(self, node, cost_d, is_deception, deception_busted, t):
         risk = intial_risk + math.exp(damping_factor * t)
-        operability = self.get_operability(t)
+        operability = self.get_operability(t)[0]
         if is_deception == 1:
             if deception_busted:
                 if operability == 1:
+                    # print 1
                     self.payoff_attacker.append(self.nodes[node].TrueValue - risk)
                     self.payoff_defender.append(0 - self.nodes[node].TrueValue - cost_d - self.cc_shading[node])
                 else:
+                    # print 2
                     self.payoff_attacker.append(0 - risk)
                     self.payoff_defender.append(0 - cost_d - self.cc_shading[node])
             else:
                 if operability == 1:
+                    # print 3
                     self.payoff_attacker.append(0 - risk)
                     self.payoff_defender.append(0 - cost_d - self.cc_shading[node])
                 else:
+                    # print 4
                     self.payoff_attacker.append(0 - risk)
                     self.payoff_defender.append(0 - cost_d - self.cc_shading[node])
         else:
             if operability == 1:
+                # print 5
                 self.payoff_attacker.append(self.nodes[node].TrueValue - risk)
                 self.payoff_defender.append(0 - self.nodes[node].TrueValue - self.cc_shading[node])
             else:
+                # print 6
                 self.payoff_attacker.append(0 - risk)
                 self.payoff_defender.append(0 - self.cc_shading[node])
 
@@ -197,8 +203,8 @@ class GameSimulate(object):
         risk = intial_risk + math.exp(damping_factor * t)
         for node in nodes:
             oper = self.get_operability(t)
-            payoff_d0 = (1-oper)*(self.cost_signal[node.index] + node.TrueValue - current_node.TrueValue - risk) + \
-                oper * (0 - risk)
+            payoff_d0 = (1-oper[1])*(self.cost_signal[node.index] + node.TrueValue - current_node.TrueValue - risk) + \
+                oper[1] * (0 - risk)
             p_d = 1 - math.exp(-(seen_deception*1.0/2))
             payoff_d1 = p_d * payoff_d0 + (1-p_d) * (0 - risk)
             expected_payoff = (payoff_d0 + payoff_d1)*1.0/2
@@ -245,14 +251,14 @@ class GameSimulate(object):
 
     @staticmethod
     def get_operability(t):
-        val =  (1-math.exp(-t))
-        return val
+        val = (1-math.exp(-t))
+        # return val
 
-        #p = random.random()
-        #if p > val:
-        #    return 1
-        #else:
-        #    return 0
+        p = random.random()
+        if p > val:
+            return 1, p
+        else:
+            return 0, p
 
     @staticmethod
     def is_deception_recognized(seen_deceptions):
