@@ -7,20 +7,23 @@ email: deepakgujraniya@gmail.com
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
-
+import random
 
 class GenerateGraph(object):
     def __init__(self, n, p, D):
         self.graph = nx.Graph()
         nodes = self.generate_nodes(n, D)
-        self.graph.add_nodes_from(nodes)
+        for node in nodes:
+            self.graph.add_node(node,Position=(random.randrange(0, 100), random.randrange(0, 100)))
+
+        #self.graph.add_nodes_from(nodes)
         G = nx.gnp_random_graph(n, p)
         edges = list()
         for edge in G.edges_iter():
             a, b = edge
             edges.append((nodes[a], nodes[b]))
         self.graph.add_edges_from(edges)
-
+        #self.draw_graph()
     def generate_nodes(self, n, D):
         nodes = list()
         visibility = np.abs(np.random.normal(5, 5, size=n))
@@ -42,7 +45,7 @@ class GenerateGraph(object):
         return [x for x in self.graph.nodes() if x.index == index][0]
 
     def draw_graph(self):
-        nx.draw(self.graph)
+        nx.draw(self.graph,pos=nx.get_node_attributes(self.graph, 'Position'))
         plt.show()
 
 class Node(object):
