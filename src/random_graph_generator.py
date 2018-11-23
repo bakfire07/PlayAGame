@@ -10,11 +10,15 @@ import numpy as np
 
 
 class GenerateGraph(object):
-    def __init__(self, n, p, D):
+    def __init__(self, n, D):
+        """
+        n: number of nodes in the graph
+        D: deception mask
+        """
         self.graph = nx.Graph()
         nodes = self.generate_nodes(n, D)
         self.graph.add_nodes_from(nodes)
-        G = nx.gnp_random_graph(n, p)
+        G = nx.scale_free_graph(n)
         edges = list()
         for edge in G.edges_iter():
             a, b = edge
@@ -55,7 +59,7 @@ class Node(object):
 
 
 if __name__ == "__main__":
-    G = GenerateGraph(10, 0.6, [2, 4])
+    G = GenerateGraph(10, [2, 4])
     print G.graph.nodes()
     print G.graph.edges()
     print "neighbors", G.graph.neighbors(G.get_node(1))

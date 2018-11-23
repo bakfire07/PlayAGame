@@ -14,8 +14,8 @@ mask_const = 0.5
 class GameSimulate(object):
 
 
-    def create_graph(self, n, p):
-        self.network = GenerateGraph(n, p, [])
+    def create_graph(self, n):
+        self.network = GenerateGraph(n, [])
         self.nodes = {node.index: node for node in self.network.graph.nodes()}  # will save some time
         # centrality =  self.network.centrality()
         self.degree_centrailty = {node.index: key for (node, key) in self.network.centrality().iteritems()}
@@ -26,7 +26,7 @@ class GameSimulate(object):
             self.degree_centrailty[node.index] + theta * node.TrueValue) for node in self.network.graph.nodes()}
         self.cost_signal = {node.index: node.TrueValue * self.node_masks[node.index] for node in
                             self.network.graph.nodes()}
-        self.cc_shading = {node: mask_const * math.fabs(1 - mask) for node, mask in self.node_masks.iteritems()}
+        self.cc_shading = {node: mask_const * math.fabs(self.cost_signal[node] - mask) for node, mask in self.node_masks.iteritems()}
 
         deception_temp = {node: c * self.cost_signal[node] for node, c in self.degree_centrailty.iteritems()}
         avg_dvalue = sum(deception_temp.values()) * 1.0 / len(deception_temp)
@@ -269,14 +269,13 @@ class GameSimulate(object):
 
 if __name__ == '__main__':
     num_nodes = 10
-    edge_probability = 0.6
     theta = 1
     defender_budget = 100
     attacker_budget = 140 #num_nodes*1000000
     max_time = num_nodes
     deployment_cost = 1
     Game = GameSimulate()
-    Game.create_graph(num_nodes, edge_probability)
+    Game.create_graph(num_nodes)
     Game.init_deceptions(theta, is_random_deception_req=True,is_deployment_random=True,percentage_deception=0.3)
     ###
     from collections import defaultdict
