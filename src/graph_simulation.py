@@ -2,7 +2,7 @@
 Author: Deepak Gujraniya
 email: deepakgujraniya@gmail.com
 """
-
+import constants
 import math, random, copy
 from random_graph_generator import GenerateGraph
 
@@ -19,8 +19,11 @@ class GameSimulate(object):
         self.nodes = {node.index: node for node in self.network.graph.nodes()}  # will save some time
         # centrality =  self.network.centrality()
         self.degree_centrailty = {node.index: key for (node, key) in self.network.centrality().iteritems()}
+        self.action = list()
+        self.action.append([(self.network.graph.nodes(), constants.DEFAULT_COLOR )])
 
     def init_deceptions(self,theta,is_random_deception_req = False, is_deployment_random = False,percentage_deception =1):
+        self.default_color_list= list()
         self.node_masks = {node.index: math.exp(
             - (self.degree_centrailty[node.index] + theta * node.TrueValue)) if node.TrueValue > 0.5 else math.exp(
             self.degree_centrailty[node.index] + theta * node.TrueValue) for node in self.network.graph.nodes()}
@@ -31,6 +34,9 @@ class GameSimulate(object):
         deception_temp = {node: c * self.cost_signal[node] for node, c in self.degree_centrailty.iteritems()}
         avg_dvalue = sum(deception_temp.values()) * 1.0 / len(deception_temp)
         self.deceptions = {node: 1 if value > avg_dvalue else 0 for node, value in deception_temp.iteritems()}
+        deception_nodes = {key: self.deceptions[key.index] for key in self.network.graph.nodes()}
+        self.default_color_list.append(([key for key, val in deception_nodes.iteritems() if val ==1],constants.DECEPTION_COLOR ))
+
         # self.busted_deceptions = {node: 0 for node in deceptionkeys()}
 
         # based on the number of deception nodes. Assign them randomly
@@ -44,16 +50,24 @@ class GameSimulate(object):
         for node in self.visited_nodes.keys():
             self.visited_nodes[node] = set()
         self.treasure_node = self.find_treasure_node()
+        self.default_color_list.append(([self.treasure_node],constants.TREASURE_NODE_COLOR))
+        self.action.append(self.default_color_list)
+        #self.action.append((constants.PAINT,[self.treasure_node],[constants.TREASURE_NODE_COLOR]))
+
         #print "number of deceptions ", sum(self.deceptions.values())
 
     def run_simulation(self, defender_budget, cost_D, attacker_budget, max_time, deception_flip=True):
-
+        color_list =  list()
         self.deceptions[self.treasure_node.index] = 0
         self.payoff_defender = list()
         self.payoff_attacker = list()
         deception_recognized = {node: 0 for node in self.deceptions.keys()}  # to stop revisiting the nodes
         # current_node = self.nodes[0]
         current_node = self.find_lowest_valuenode()
+        #show the current node
+        color_list.append(([current_node],constants.ON_NODE_COLOR))
+        self.action.append(color_list)
+
         t = 0
         seen_deception = 0
         winner = "Attacker"
@@ -63,8 +77,17 @@ class GameSimulate(object):
             seen_deception = 1
         self.update_payoff(0, cost_D, self.deceptions[0], seen_deception, t)
         neighbors = self.network.graph.neighbors(self.nodes[0])
+        #show the neighbours
+        color_list.append((neighbors,constants.NEEIGHBOURS_NODE_COLOR))
+        self.action.append(color_list)
+        color_list = list()
+
         deception_recognized[current_node.index] = self.is_deception_recognized(seen_deception)
         while sum(self.payoff_defender) + defender_budget > 0:
+            #set the default color list
+            #self.action.append(self.default_color_list)
+            color_list=list()
+            color_list += self.default_color_list
             t += 1
             if t >= max_time:
                 # print "attacker stayed too long"
@@ -114,6 +137,12 @@ class GameSimulate(object):
                 seen_deception += self.deceptions[next_node.index]
                 deception_recognized[next_node.index] = self.is_deception_recognized(seen_deception)
                 neighbors = self.network.graph.neighbors(next_node)
+
+                #set the next node and possible moves
+                color_list.append(([next_node],constants.ON_NODE_COLOR))
+                color_list.append((neighbors,constants.NEEIGHBOURS_NODE_COLOR))
+                self.action.append(color_list)
+
                 # flip best neighbor into a deception if current deception is not recognized
                 if deception_flip and not deception_recognized[next_node.index]:
                     best_neighbor = self.find_best_neighbor(neighbors)
@@ -168,7 +197,7 @@ class GameSimulate(object):
 
     def update_payoff(self, node, cost_d, is_deception, deception_busted, t):
         risk = intial_risk + math.exp(damping_factor * t)
-        operability = self.get_operability(t)[0]
+        operability = self.get_operability(t)
         if is_deception == 1:
             if deception_busted:
                 if operability == 1:
@@ -203,8 +232,8 @@ class GameSimulate(object):
         risk = intial_risk + math.exp(damping_factor * t)
         for node in nodes:
             oper = self.get_operability(t)
-            payoff_d0 = (1-oper[1])*(self.cost_signal[node.index] + node.TrueValue - current_node.TrueValue - risk) + \
-                oper[1] * (0 - risk)
+            payoff_d0 = (1-oper)*(self.cost_signal[node.index] + node.TrueValue - current_node.TrueValue - risk) + \
+                oper * (0 - risk)
             p_d = 1 - math.exp(-(seen_deception*1.0/2))
             payoff_d1 = p_d * payoff_d0 + (1-p_d) * (0 - risk)
             expected_payoff = (payoff_d0 + payoff_d1)*1.0/2
@@ -251,14 +280,15 @@ class GameSimulate(object):
 
     @staticmethod
     def get_operability(t):
-        val = (1-math.exp(-t))
-        # return val
+        val =  (1-math.exp(-t))
+        #return val
 
         p = random.random()
         if p > val:
-            return 1, p
+           return 1
         else:
-            return 0, p
+           return 0
+
 
     @staticmethod
     def is_deception_recognized(seen_deceptions):
@@ -268,7 +298,8 @@ class GameSimulate(object):
 
 
 if __name__ == '__main__':
-    num_nodes = 10
+    num_nodes = 30
+
     theta = 1
     defender_budget = 100
     attacker_budget = 140 #num_nodes*1000000

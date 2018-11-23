@@ -2,7 +2,10 @@
 
 from graph_simulation import GameSimulate
 from collections import defaultdict
-
+import animation
+from animation import initilize
+from animation import process_fig
+from animation import draw_fig
 
 def run_vary_theta_nodes_centrality():
     num_nodes_list = [10,20,30,40]
@@ -102,9 +105,9 @@ def run_dynamic_deception_time():
             for i in range(100):
                 result[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time, deception_flip=False)] += 1
                 attacker_payoff0 += sum(Game.payoff_attacker)
-            for i in range(100):
-                result1[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time, deception_flip=True)] += 1
-                attacker_payoff1 += sum(Game.payoff_attacker)
+            # for i in range(100):
+            #     result1[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time, deception_flip=True)] += 1
+            #     attacker_payoff1 += sum(Game.payoff_attacker)
             Game.deceptions.update(Game.deceptions.fromkeys(Game.deceptions, 0))
             for i in range(100):
                 result2[Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time, deception_flip=False)] += 1
@@ -112,12 +115,28 @@ def run_dynamic_deception_time():
 
             print "Static deception: Num of Nodes: %d, Max time:%d :%s" % (num_nodes, max_time, result.items())
             print "attacker's payoff", attacker_payoff0
-            print "Dynamic deception: Num of Nodes: %d, Max time:%d :%s" % (num_nodes, max_time, result1.items())
-            print "attacker's payoff", attacker_payoff1
+            # print "Dynamic deception: Num of Nodes: %d, Max time:%d :%s" % (num_nodes, max_time, result1.items())
+            # print "attacker's payoff", attacker_payoff1
             print "No Deception: Num of Nodes: %d, Max time:%d :%s" % (num_nodes, max_time, result2.items())
             print "attacker's payoff", attacker_payoff2
 
 
+def run_animation():
+    num_nodes= 40
+    theta = 1
+    deployment_cost = 1
+    result = defaultdict(int)
+
+    Game = GameSimulate()
+    Game.create_graph(num_nodes)
+    defender_budget = 100
+    attacker_budget = 1000000
+    max_time = num_nodes*100
+    initilize(Game.network.graph)
+    Game.init_deceptions(theta, False)
+    print Game.run_simulation(defender_budget, deployment_cost, attacker_budget, max_time)
+    process_fig(Game.action)
+    #Game.action
 
 def run_random_deployement():
     num_nodes_list = [10, 20, 30, 40]
@@ -126,7 +145,7 @@ def run_random_deployement():
     result = defaultdict(int)
     for num_nodes in num_nodes_list:
         defender_budget = 100
-        attacker_budget = 100
+        attacker_budget = 100000
         Game = GameSimulate()
         Game.create_graph(num_nodes)
         percentage_list = [0.3,0.5,0.8]
@@ -154,5 +173,6 @@ if __name__ == '__main__':
     # run_vary_theta_nodes_centrality()
     # run_different_budget()
     # run_different_time()
-    # run_dynamic_deception_time()
-    run_random_deployement()
+    #run_dynamic_deception_time()
+    run_animation()
+    #run_random_deployement()
